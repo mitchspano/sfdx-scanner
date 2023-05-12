@@ -55,6 +55,7 @@ public abstract class BaseSFVertex implements CollectibleObject, SFVertex {
     private final LazyVertexList<BaseSFVertex> children;
     private final LazyVertex<BaseSFVertex> parent;
     private final LazyOptionalVertex<UserClassVertex> parentClass;
+    private final LazyOptionalVertex<UserTriggerVertex> parentTrigger;
     private final LazyVertexList<AnnotationVertex> previousLineAnnotations;
 
     /**
@@ -125,6 +126,7 @@ public abstract class BaseSFVertex implements CollectibleObject, SFVertex {
         this.children = _getChildren();
         this.parent = _getParent();
         this.parentClass = _getParentClass();
+        this.parentTrigger = _getParentTrigger();
         this.previousLineAnnotations = _getPreviousLineAnnotations();
     }
 
@@ -344,6 +346,18 @@ public abstract class BaseSFVertex implements CollectibleObject, SFVertex {
         return parentClass.get();
     }
 
+    private LazyOptionalVertex<UserTriggerVertex> _getParentTrigger() {
+        return new LazyOptionalVertex<>(
+                () ->
+                        g().V(getId())
+                                .repeat(out(Schema.PARENT))
+                                .until(hasLabel(NodeType.USER_TRIGGER)));
+    }
+
+    public Optional<UserTriggerVertex> getParentTrigger() {
+        return parentTrigger.get();
+    }
+
     /** Finds all Annotation vertices that are present on the previous line in the code */
     public List<AnnotationVertex> getAnnotations() {
         return previousLineAnnotations.get();
@@ -382,6 +396,7 @@ public abstract class BaseSFVertex implements CollectibleObject, SFVertex {
         engineDirectives.addAll(getEngineDirectives());
         getParentMethod().ifPresent(m -> engineDirectives.addAll(m.getEngineDirectives()));
         getParentClass().ifPresent(c -> engineDirectives.addAll(c.getAllEngineDirectives()));
+        getParentTrigger().ifPresent(t -> engineDirectives.addAll(t.getAllEngineDirectives()));
         // TODO: This needs to be more future proof
         for (String nodeType :
                 new String[] {
@@ -402,6 +417,7 @@ public abstract class BaseSFVertex implements CollectibleObject, SFVertex {
         annotations.addAll(getAnnotations());
         getParentMethod().ifPresent(m -> annotations.addAll(m.getAnnotations()));
         getParentClass().ifPresent(c -> annotations.addAll(c.getAllAnnotations()));
+        getParentTrigger().ifPresent(t -> annotations.addAll(t.getAllAnnotations()));
         return annotations;
     }
 

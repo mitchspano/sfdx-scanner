@@ -63,6 +63,7 @@ public class Schema {
     public static final String SUPER_CLASS_NAME = "SuperClassName";
     public static final String SUPER_INTERFACE_NAME = "SuperInterfaceName";
     public static final String TARGET_NAME = "TargetName";
+    public static final String TRIGGER_INVOKE_METHOD = "invoke";
     public static final String TYPE = "Type";
     /** Contains type for statements such as MyClass.class */
     public static final String TYPE_REF = "TypeRef";

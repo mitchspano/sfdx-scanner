@@ -40,7 +40,9 @@ public class ApexPathSource {
          */
         INBOUND_EMAIL_HANDLER(new InboundEmailHandlerSupplier()),
         /** Non-test methods that return a {@code PageReference} object. */
-        PAGE_REFERENCE(new PageReferenceSupplier());
+        PAGE_REFERENCE(new PageReferenceSupplier()),
+        /** Synthetic methods representing the internals of a trigger. */
+        TRIGGER(new TriggerSupplier());
 
         private final AbstractSourceSupplier supplier;
 

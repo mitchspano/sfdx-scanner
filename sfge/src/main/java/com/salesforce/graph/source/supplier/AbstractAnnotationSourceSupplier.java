@@ -26,7 +26,7 @@ abstract class AbstractAnnotationSourceSupplier extends AbstractSourceSupplier {
     public List<MethodVertex> getVertices(GraphTraversalSource g, List<String> targetFiles) {
         return SFVertexFactory.loadVertices(
                 g,
-                rootMethodTraversal(g, targetFiles)
+                rootMethodTraversal(g, new String[] {ASTConstants.NodeType.USER_CLASS}, targetFiles)
                         .where(
                                 out(Schema.CHILD)
                                         .hasLabel(ASTConstants.NodeType.MODIFIER_NODE)

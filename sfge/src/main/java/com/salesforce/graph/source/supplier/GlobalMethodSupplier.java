@@ -18,7 +18,7 @@ public class GlobalMethodSupplier extends AbstractSourceSupplier {
         // Get all methods in the target files.
         return SFVertexFactory.loadVertices(
                 g,
-                rootMethodTraversal(g, targetFiles)
+                rootMethodTraversal(g, new String[] {ASTConstants.NodeType.USER_CLASS}, targetFiles)
                         .filter(
                                 __.and(
                                         // If a method has at least one block statement, then it

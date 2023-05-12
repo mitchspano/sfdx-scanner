@@ -32,10 +32,8 @@ public abstract class AbstractSourceSupplier {
      * Helpful method for creating a traversal of all the non-test methods in {@code targetFiles}.
      */
     protected GraphTraversal<Vertex, Vertex> rootMethodTraversal(
-            GraphTraversalSource g, List<String> targetFiles) {
-        // Only look at UserClass vertices. Not interested in Enums, Interfaces, or Triggers
-        final String[] labels = new String[] {ASTConstants.NodeType.USER_CLASS};
-        return TraversalUtil.fileRootTraversal(g, labels, targetFiles)
+            GraphTraversalSource g, String[] rootLabels, List<String> targetFiles) {
+        return TraversalUtil.fileRootTraversal(g, rootLabels, targetFiles)
                 .not(has(Schema.IS_TEST, true))
                 .repeat(__.out(Schema.CHILD))
                 .until(__.hasLabel(ASTConstants.NodeType.METHOD))
