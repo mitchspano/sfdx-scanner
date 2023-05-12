@@ -6,10 +6,7 @@ import com.salesforce.exception.UnexpectedException;
 import com.salesforce.graph.build.CaseSafePropertyUtil.H;
 import com.salesforce.graph.ops.GraphUtil;
 import com.salesforce.graph.ops.TraversalUtil;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.TreeSet;
+import java.util.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
@@ -39,7 +36,7 @@ public final class InMemoryJustInTimeGraph implements JustInTimeGraph {
         this.ruleGraph = GraphUtil.getGraph();
         this.importedTypes = CollectionUtil.newTreeSet();
         importStandardLibrary();
-        loadUserClass(definingType);
+        loadUserType(definingType);
     }
 
     GraphTraversalSource getRuleGraph() {
@@ -91,15 +88,17 @@ public final class InMemoryJustInTimeGraph implements JustInTimeGraph {
     /**
      * @return a traversal that is used to load the vertex identified by {@code userClassName}
      */
-    private static GraphTraversal<Vertex, Vertex> getUserClassTraversal(
+    private static GraphTraversal<Vertex, Vertex> getTypeTraversal(
             GraphTraversalSource graph, String userClassName) {
+        List<String> labels =
+                Arrays.asList(ASTConstants.NodeType.USER_CLASS, ASTConstants.NodeType.USER_TRIGGER);
         return graph.V()
-                .where(H.has(ASTConstants.NodeType.USER_CLASS, Schema.DEFINING_TYPE, userClassName))
-                .where(H.has(ASTConstants.NodeType.USER_CLASS, Schema.NAME, userClassName));
+                .where(H.has(labels, Schema.DEFINING_TYPE, userClassName))
+                .where(H.has(labels, Schema.NAME, userClassName));
     }
 
     @Override
-    public void loadUserClass(String definingType) {
+    public void loadUserType(String definingType) {
         if (this.importedTypes.contains(definingType)) {
             if (LOGGER.isTraceEnabled()) {
                 LOGGER.trace(
@@ -124,8 +123,7 @@ public final class InMemoryJustInTimeGraph implements JustInTimeGraph {
         final String userClassName = definingType.split("\\.")[0];
 
         // See if the class has already been imported into the rule graph
-        final List<Vertex> existingVertices =
-                getUserClassTraversal(ruleGraph, userClassName).toList();
+        final List<Vertex> existingVertices = getTypeTraversal(ruleGraph, userClassName).toList();
         if (!existingVertices.isEmpty()) {
             // Don't load the vertex if it already exists in the graph. This can happen if the class
             // was loaded because
@@ -141,7 +139,7 @@ public final class InMemoryJustInTimeGraph implements JustInTimeGraph {
         }
 
         // Find the vertex in the full graph and import it
-        final List<Vertex> vertices = getUserClassTraversal(fullGraph, userClassName).toList();
+        final List<Vertex> vertices = getTypeTraversal(fullGraph, userClassName).toList();
         if (vertices.size() > 1) {
             throw new UnexpectedException(
                     "UserClassName=" + userClassName + ", vertices=" + vertices);

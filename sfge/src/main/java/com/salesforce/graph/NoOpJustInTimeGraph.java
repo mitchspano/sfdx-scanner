@@ -3,7 +3,7 @@ package com.salesforce.graph;
 /** Mock implementation for cases where the JustInTime graph has not been configured. */
 public final class NoOpJustInTimeGraph implements JustInTimeGraph {
     @Override
-    public void loadUserClass(String definingType) {
+    public void loadUserType(String definingType) {
         // Intentionally left blank
     }
 

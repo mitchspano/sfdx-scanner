@@ -99,7 +99,7 @@ public class CaseSafePropertyUtil {
      * Dynamically load the type, this will be a no-op if JustInTimeGraph isn't currently enabled.
      */
     private static void dynamicallyLoadType(String definingType) {
-        JustInTimeGraphProvider.get().loadUserClass(definingType);
+        JustInTimeGraphProvider.get().loadUserType(definingType);
     }
 
     public static class H {

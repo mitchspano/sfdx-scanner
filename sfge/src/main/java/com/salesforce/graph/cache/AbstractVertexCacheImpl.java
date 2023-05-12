@@ -123,7 +123,7 @@ abstract class AbstractVertexCacheImpl implements VertexCache {
             // The caller is interested in the DefiningType identified by the result. Seed the JITG
             // with this type in
             // case the caller queries for the vertex by id in the future.
-            JustInTimeGraphProvider.get().loadUserClass(t.getDefiningType());
+            JustInTimeGraphProvider.get().loadUserType(t.getDefiningType());
         }
         return Optional.ofNullable(t);
     }

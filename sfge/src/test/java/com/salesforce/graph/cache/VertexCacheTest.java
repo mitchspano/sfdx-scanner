@@ -272,7 +272,7 @@ public class VertexCacheTest {
      * JustInTimeGraph. This requires another mechanism to seed Thread2's JustInTimeGraph with the
      * DefiningType of V. The solution is that {@link
      * com.salesforce.graph.cache.AbstractVertexCacheImpl#get(VertexCache.CacheKey, Supplier)}
-     * invokes {@link JustInTimeGraph#loadUserClass(String)} for any vertices returned from this
+     * invokes {@link JustInTimeGraph#loadUserType(String)} for any vertices returned from this
      * method.
      */
     @Test
