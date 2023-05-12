@@ -85,7 +85,8 @@ public class CustomerApexVertexBuilderTest {
 
     /**
      * Verifies that the special properties associated with {@link
-     * com.salesforce.graph.vertex.UserTriggerVertex} are set.
+     * com.salesforce.graph.vertex.UserTriggerVertex} are set, and the necessary synthetic vertices
+     * are added.
      */
     @Test
     public void testTriggers() {
@@ -93,6 +94,9 @@ public class CustomerApexVertexBuilderTest {
         String triggerSource =
             "trigger AccountBefore on Account (before insert, before update) {\n"
           + "    if (Trigger.isInsert) {\n"
+          + "        System.debug('Some debug-worthy message');\n"
+          + "    }\n"
+          + "    if (Trigger.isUpdate) {\n"
           + "        System.debug('Some debug-worthy message');\n"
           + "    }\n"
           + "}\n";
@@ -128,6 +132,19 @@ public class CustomerApexVertexBuilderTest {
                         .elementMap()
                         .next();
         assertEquals("AccountBefore", invokeVertex.get(Schema.DEFINING_TYPE));
+        // Validate that the `invoke()` method's contents are wrapped in a synthetic block
+        // statement.
+        Map<Object, Object> methodBody =
+                g.V()
+                        .hasLabel(NodeType.USER_TRIGGER)
+                        .out(Schema.CHILD)
+                        .hasLabel(NodeType.METHOD)
+                        .has(Schema.NAME, "invoke")
+                        .out(Schema.CHILD)
+                        .hasLabel(NodeType.BLOCK_STATEMENT)
+                        .elementMap()
+                        .next();
+        assertEquals(true, methodBody.get(Schema.IS_SYNTHETIC));
     }
 
     @Test

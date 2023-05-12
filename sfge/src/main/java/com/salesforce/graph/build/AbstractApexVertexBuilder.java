@@ -5,12 +5,7 @@ import com.salesforce.apex.jorje.JorjeNode;
 import com.salesforce.collections.CollectionUtil;
 import com.salesforce.exception.UnexpectedException;
 import com.salesforce.graph.Schema;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -66,30 +61,56 @@ abstract class AbstractApexVertexBuilder {
             vNode.property(Schema.FILE_NAME, fileName);
         }
 
-        Vertex vPreviousSibling = null;
         final List<JorjeNode> children = node.getChildren();
-        final Set<Vertex> verticesAddressed = new HashSet<>();
-        verticesAddressed.add(vNode);
+        processChildren(node, vNode, children);
+        afterInsert(g, node, vNode);
+        if (rootVNode != null) {
+            // Only call this for the root node
+            afterFileInsert(g, rootVNode);
+        }
+    }
 
+    private final void processChildren(JorjeNode node, Vertex vNode, List<JorjeNode> children) {
+        Set<Vertex> verticesAddressed = new HashSet<>();
+        Vertex vPreviousSibling = null;
         for (int i = 0; i < children.size(); i++) {
-            final JorjeNode child = children.get(i);
-            final Vertex vChild = g.addV(child.getLabel()).next();
+            JorjeNode child = children.get(i);
+            // It's possible that synthetic node creation made the child effectively
+            // the first/last child. So update that information here.
+            child.setFirstChild(i == 0);
+            child.setLastChild(i == children.size() - 1);
+            Vertex vChild = g.addV(child.getLabel()).next();
             addProperties(g, child, vChild);
-
-            /**
-             * Handle static block if we are looking at a <clinit> method that has a block
-             * statement. See {@linkplain StaticBlockUtil} on why this is needed and how we handle
-             * it.
-             */
-            if (StaticBlockUtil.isStaticBlockStatement(node, child)) {
-                final Vertex parentVertexForChild =
+            // Handle static block if we are looking at a <clinit> method that has a block
+            // statement. See {@linkplain StaticBlockUtil} on why this is needed and how we handle
+            // it.
+            if (node != null && StaticBlockUtil.isStaticBlockStatement(node, child)) {
+                Vertex syntheticParent =
                         StaticBlockUtil.createSyntheticStaticBlockMethod(g, vNode, i);
-                GremlinVertexUtil.addParentChildRelationship(g, parentVertexForChild, vChild);
-                verticesAddressed.add(parentVertexForChild);
+                GremlinVertexUtil.addParentChildRelationship(g, syntheticParent, vChild);
+                verticesAddressed.add(syntheticParent);
+            } else if (node != null
+                    && BlockStatementUtil.requiresSyntheticBlockStatement(node, child)) {
+                // If there ought to be a BlockStatement enclosing this child, then we should create
+                // one and use a recursive call to process all remaining children as though they
+                // were children of the synthesized BlockStatement.
+                // ASSUMPTION: All subsequent children belong in this block statement.
+                //             If this assumption is invalidated, we'll need logic
+                //             to identify which children should be re-parented.
+                Vertex syntheticParent =
+                        BlockStatementUtil.createSyntheticBlockStatement(g, vNode, i);
+                if (vPreviousSibling != null) {
+                    g.addE(Schema.NEXT_SIBLING)
+                            .from(vPreviousSibling)
+                            .to(syntheticParent)
+                            .iterate();
+                }
+                processChildren(null, syntheticParent, children.subList(i, children.size() - 1));
+                verticesAddressed.add(syntheticParent);
+                break;
             } else {
                 GremlinVertexUtil.addParentChildRelationship(g, vNode, vChild);
             }
-
             if (vPreviousSibling != null) {
                 g.addE(Schema.NEXT_SIBLING).from(vPreviousSibling).to(vChild).iterate();
             }
@@ -98,13 +119,9 @@ abstract class AbstractApexVertexBuilder {
             // To save memory in the graph, don't pass the source name into recursive calls.
             buildVertices(child, vChild, null);
         }
-        // Execute afterInsert() on each vertex we addressed
-        for (Vertex vertex : verticesAddressed) {
-            afterInsert(g, node, vertex);
-        }
-        if (rootVNode != null) {
-            // Only call this for the root node
-            afterFileInsert(g, rootVNode);
+        // Execute afterInsert() on each vertex we addressed.
+        for (Vertex vertexAddressed : verticesAddressed) {
+            afterInsert(g, node, vertexAddressed);
         }
     }
 
@@ -113,7 +130,8 @@ abstract class AbstractApexVertexBuilder {
      * visitor pattern for more general purpose solutions
      */
     private final void afterInsert(GraphTraversalSource g, JorjeNode node, Vertex vNode) {
-        if (node.getLabel().equals(ASTConstants.NodeType.METHOD)) {
+        if (node.getLabel().equals(ASTConstants.NodeType.METHOD)
+                && vNode.label().equals(ASTConstants.NodeType.METHOD)) {
             // If we just added a method, create forward and
             // backward code flow for the contents of the method
             MethodPathBuilderVisitor.apply(g, vNode);
