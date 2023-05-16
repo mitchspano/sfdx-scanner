@@ -41,7 +41,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSo
  */
 @SuppressWarnings(
         "PMD.EmptyIfStmt") // TODO: consider using visitor pattern to avoid empty if statements
-public abstract class AbstractClassScope extends PathScopeVisitor implements Typeable {
+public abstract class AbstractClassScope extends ContainedScope implements Typeable {
     public enum State {
         /** No initialization has begun */
         UNINITIALIZED,

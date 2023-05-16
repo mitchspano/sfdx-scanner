@@ -72,13 +72,18 @@ public class PathBasedRuleRunner {
         final ApexPathExpanderConfig expanderConfig = getApexPathExpanderConfig();
 
         // Get all the paths that originate in the entry point
-        final ApexPathRetrievalSummary pathSummary = getPathSummary(expanderConfig);
+        ApexPathRetrievalSummary pathSummary;
+        try {
+            pathSummary = getPathSummary(expanderConfig);
 
-        // Execute rules on the paths rejected
-        executeRulesOnAnomalies(pathSummary.getRejectionReasons());
+            // Execute rules on the paths rejected
+            executeRulesOnAnomalies(pathSummary.getRejectionReasons());
 
-        // Execute rules on the paths found
-        executeRulesOnPaths(pathSummary.getAcceptedPaths());
+            // Execute rules on the paths found
+            executeRulesOnPaths(pathSummary.getAcceptedPaths());
+        } catch (Exception e) {
+            throw e;
+        }
 
         if (!violations.isEmpty()) {
             if (LOGGER.isInfoEnabled()) {

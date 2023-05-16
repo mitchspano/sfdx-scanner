@@ -152,7 +152,8 @@ public class ApexPath implements DeepCloneable<ApexPath>, Collectible<ApexPath> 
             // This will use the cache, it's ok to use the full graph
             final GraphTraversalSource g = VertexCacheProvider.get().getFullGraph();
             final String className = methodVertex.getDefiningType();
-            if (methodVertex.isStatic()) {
+            // Static methods and trigger bodies have no instance that needs to be initialized.
+            if (methodVertex.isStatic() || methodVertex.isTriggerBody()) {
                 this.instanceInitializationPath = null;
             } else {
                 this.instanceInitializationPath =

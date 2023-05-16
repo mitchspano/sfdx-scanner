@@ -1,6 +1,6 @@
 package com.salesforce.graph.build;
 
-import com.salesforce.apex.jorje.ASTConstants;
+import com.salesforce.apex.jorje.ASTConstants.NodeType;
 import com.salesforce.apex.jorje.JorjeNode;
 import com.salesforce.collections.CollectionUtil;
 import com.salesforce.exception.UnexpectedException;
@@ -73,8 +73,14 @@ abstract class AbstractApexVertexBuilder {
     private final void processChildren(JorjeNode node, Vertex vNode, List<JorjeNode> children) {
         Set<Vertex> verticesAddressed = new HashSet<>();
         Vertex vPreviousSibling = null;
-        for (int i = 0; i < children.size(); i++) {
-            JorjeNode child = children.get(i);
+        // Define our loop variable as -1.
+        int i = -1;
+        for (JorjeNode child : children) {
+            //if (shouldSkipChild(node, child)) {
+            //    continue;
+            //}
+            // Iterate the loop variable at the start, so we don't accidentally miss it later.
+            i += 1;
             // It's possible that synthetic node creation made the child effectively
             // the first/last child. So update that information here.
             child.setFirstChild(i == 0);
@@ -89,7 +95,7 @@ abstract class AbstractApexVertexBuilder {
                         StaticBlockUtil.createSyntheticStaticBlockMethod(g, vNode, i);
                 GremlinVertexUtil.addParentChildRelationship(g, syntheticParent, vChild);
                 verticesAddressed.add(syntheticParent);
-            } else if (node != null
+            } else if (false && node != null
                     && BlockStatementUtil.requiresSyntheticBlockStatement(node, child)) {
                 // If there ought to be a BlockStatement enclosing this child, then we should create
                 // one and use a recursive call to process all remaining children as though they
@@ -105,7 +111,7 @@ abstract class AbstractApexVertexBuilder {
                             .to(syntheticParent)
                             .iterate();
                 }
-                processChildren(null, syntheticParent, children.subList(i, children.size() - 1));
+                processChildren(null, syntheticParent, children.subList(i, children.size()));
                 verticesAddressed.add(syntheticParent);
                 break;
             } else {
@@ -130,11 +136,13 @@ abstract class AbstractApexVertexBuilder {
      * visitor pattern for more general purpose solutions
      */
     private final void afterInsert(GraphTraversalSource g, JorjeNode node, Vertex vNode) {
-        if (node.getLabel().equals(ASTConstants.NodeType.METHOD)
-                && vNode.label().equals(ASTConstants.NodeType.METHOD)) {
+        if (node.getLabel().equals(NodeType.METHOD)
+                && vNode.label().equals(NodeType.METHOD)) {
             // If we just added a method, create forward and
             // backward code flow for the contents of the method
             MethodPathBuilderVisitor.apply(g, vNode);
+        } else if (node.getLabel().equals(NodeType.USER_TRIGGER)) {
+
         }
     }
 
@@ -177,5 +185,13 @@ abstract class AbstractApexVertexBuilder {
     /** Add additional properties to the node that aren't present in the orginal AST */
     protected Map<String, Object> getAdditionalProperties(JorjeNode node) {
         return new HashMap<>();
+    }
+
+    protected boolean shouldSkipChild(JorjeNode parent, JorjeNode child) {
+        // Skip the `Field` vertices for triggers.
+        if (parent != null && parent.getLabel().equalsIgnoreCase(NodeType.USER_TRIGGER) && child.getLabel().equalsIgnoreCase(NodeType.FIELD)) {
+            return true;
+        }
+        return false;
     }
 }

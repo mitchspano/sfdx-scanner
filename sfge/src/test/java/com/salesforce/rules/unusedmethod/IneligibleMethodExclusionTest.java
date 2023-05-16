@@ -204,7 +204,17 @@ public class IneligibleMethodExclusionTest extends BaseUnusedMethodTest {
     public void emailHandlerMethod_expectNoAnalysis() {
         String sourceCode =
                 "global class MyClass implements Messaging.InboundEmailhandler {\n"
+                        + "    static{\n"
+                        + "        System.debug('asdfasdf');\n"
+                        + "    }\n"
+                        + "    \n"
                         + "    private Messaging.InboundEmailResult handleInboundEmail(Messaging.InboundEmail email, Messaging.InboundEnvelope envelope) {\n"
+                    + "    boolean b = false;\n"
+                        + "        if (email == null) {\n"
+                        + "              System.debug('asdf');\n"
+                        + "        } else if (envelope == null) {\n"
+                        + "              System.debug('eeee');\n"
+                        + "        }\n"
                         + "        return null;\n"
                         + "    }\n"
                         + "}\n";
@@ -216,11 +226,31 @@ public class IneligibleMethodExclusionTest extends BaseUnusedMethodTest {
     public void trigger_expectNoAnalysis() {
         // spotless:off
         String sourceCode =
-            "trigger AccountBefore on Account (before insert) {\n"
-          + "    if (Trigger.isBefore) {\n"
-          + "        System.debug('asdf');\n"
-          + "    }\n"
-          + "}\n";
+  "trigger AccountBefore on Account(before insert) {\n"
++ "            boolean b = true;\n"
++ "            boolean b2 = !b;\n"
++ "            if (Trigger.isBefore) {\n"
++ "                b = true;\n"
++ "                boolean b3 = true;\n"
++ "                boolean b4 = !b3;\n"
++ "                boolean b5 = !b;\n"
++ "            } else {\n"
++ "                boolean b6 = true;\n"
++ "                boolean b7 = !b6;\n"
++ "                boolean b8 = !b;\n"
++ "            }\n"
++ "            \n"
++ "            public class SomeInner {\n"
++ "                public boolean beep() {\n"
++ "                      return true;\n"
++ "                }\n"
++ "            }\n"
++ "            \n"
++ "            public boolean beep() {\n"
++ "                return false;\n"
++ "            }\n"
++ "        }\n";
+
         // spotless:on
         assertMethodIneligibility(
                 sourceCode, new String[] {"AccountBefore"}, new String[] {"invoke"}, new int[] {1});

@@ -58,6 +58,11 @@ public abstract class MethodVertex extends FieldWithModifierVertex implements Na
         return getBoolean(Schema.CONSTRUCTOR);
     }
 
+    public boolean isTriggerBody() {
+        return getParentTrigger().isPresent()
+                && getName().equalsIgnoreCase(Schema.TRIGGER_INVOKE_METHOD);
+    }
+
     public int getArity() {
         return getInteger(Schema.ARITY);
     }

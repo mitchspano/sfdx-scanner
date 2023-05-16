@@ -177,6 +177,7 @@ public final class DefaultSymbolProviderVertexVisitor
             }
 
             boolean isStatic;
+            boolean isTriggerBody = false;
             MethodVertex method = null;
             if (vertex instanceof FieldDeclarationVertex) {
                 FieldDeclarationVertex fieldDeclaration = (FieldDeclarationVertex) vertex;
@@ -189,6 +190,7 @@ public final class DefaultSymbolProviderVertexVisitor
                 // inline to the class that implements the method.
                 method = vertex.getParentMethod().get();
                 isStatic = method.isStatic();
+                isTriggerBody = method.isTriggerBody();
                 // Parse final variables for any new class types. This will only cover final
                 // variables that are set outside
                 if (LOGGER.isDebugEnabled()) {
@@ -202,29 +204,32 @@ public final class DefaultSymbolProviderVertexVisitor
                 }
             }
 
-            AbstractClassScope classScope;
+            ContainedScope containedScope;
             // Create the correct class scope based on the method being invoked. Static methods only
             // have access to
             // static member variables and instance members have access to instance variables. The
             // correct class needs
             // to be used because the AST differs between the two cases.
-            if (isStatic) {
-                classScope =
+            // TODO: USE CONTAINED SCOPE HERE.
+            if (isTriggerBody) {
+                containedScope = TriggerScope.get(g, className);
+            } else if (isStatic) {
+                containedScope =
                         ContextProviders.CLASS_STATIC_SCOPE
                                 .get()
                                 .getClassStaticScope(className)
                                 .get();
             } else {
-                classScope = ClassInstanceScope.get(g, className);
+                containedScope = ClassInstanceScope.get(g, className);
             }
 
             if (method != null) {
                 MethodInvocationScope methodInvocationScope =
                         MethodUtil.getIndeterminantMethodInvocationScope(method);
-                classScope.pushMethodInvocationScope(methodInvocationScope);
+                containedScope.pushMethodInvocationScope(methodInvocationScope);
             }
-            scopeStack.push(classScope);
-            started = classScope;
+            scopeStack.push(containedScope);
+            started = containedScope;
         } else if (scopeStack.size() == 1 && scopeStack.peek() instanceof AbstractClassScope) {
             // TODO: Document why this is needed. Maybe it can be removed.
             // ApexClassInstanceValueTest#testJSONDeserializeFieldsAreIndeterminant fails if removed

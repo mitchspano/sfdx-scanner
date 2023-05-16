@@ -255,7 +255,7 @@ public class BaseUnusedMethodTest {
             String entryMethod,
             Collection<String> usedMethodKeys,
             Collection<String> unusedMethodKeys) {
-        TestUtil.buildGraph(g, sourceCodes);
+        TestUtil.buildGraph(g, sourceCodes, true);
 
         UnusedMethodRule rule = UnusedMethodRule.getInstance();
         MethodVertex entryMethodVertex =
@@ -353,7 +353,7 @@ public class BaseUnusedMethodTest {
      */
     protected void assertMethodIneligibility(
             String[] sourceCodes, String[] defTypes, String[] methodNames, int[] beginLines) {
-        TestUtil.buildGraph(g, sourceCodes);
+        TestUtil.buildGraph(g, sourceCodes, true);
         UnusedMethodRule rule = UnusedMethodRule.getInstance();
         // Get every eligible method.
         List<MethodVertex> eligibleMethods = rule.getEligibleMethods(g);

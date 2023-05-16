@@ -65,7 +65,8 @@ public class Main {
 
     public static void main(String[] args) {
         Main m = new Main();
-        int status = m.process(args);
+        //int status = m.process(args);
+        int status = m.process("execute", "/Users/jfeingold/Code/sfdx-scanner/sfge-input.txt");
         System.exit(status);
     }
 

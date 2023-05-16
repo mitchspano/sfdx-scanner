@@ -107,6 +107,8 @@ public final class TreeBuilderVisitor extends AstVisitor<NoopScope> {
      */
     private final Stack<AstNodeWrapper<?>> nodeStack;
 
+    private boolean inTrigger = false;
+
     TreeBuilderVisitor(AstNodeWrapper<?> root) {
         this.root = root;
         this.nodeStack = new Stack<>();
@@ -190,11 +192,13 @@ public final class TreeBuilderVisitor extends AstVisitor<NoopScope> {
 
     @Override
     public boolean visit(UserTrigger node, NoopScope scope) {
+        inTrigger = true;
         return defaultVisit(node);
     }
 
     @Override
     public void visitEnd(UserTrigger node, NoopScope scope) {
+        inTrigger = false;
         defaultVisitEnd(node);
     }
 
@@ -790,12 +794,17 @@ public final class TreeBuilderVisitor extends AstVisitor<NoopScope> {
 
     @Override
     public boolean visit(Field node, NoopScope scope) {
+        //if (inTrigger) {
+        //    return false;
+        //}
         return defaultVisit(node);
     }
 
     @Override
     public void visitEnd(Field node, NoopScope scope) {
-        defaultVisitEnd(node);
+        //if (!inTrigger) {
+            defaultVisitEnd(node);
+        //}
     }
 
     @Override
