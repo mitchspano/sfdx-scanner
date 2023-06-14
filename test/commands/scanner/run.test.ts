@@ -153,11 +153,10 @@ describe('scanner:run', function () {
 						const violations = ctx.stdout.split('<violation');
 						// The first list item is going to be the header, so we need to pull that off.
 						violations.shift();
-						expect(violations.length).to.equal(2, 'Should be two violations detected in the file');
+						expect(violations.length).to.equal(1, 'Should be one violation detected in the file');
 						// We'll check each violation in enough depth to be confident that the expected violations were returned in the
 						// expected order.
-						expect(violations[0]).to.match(/line="3".+rule="VariableNamingConventions"/);
-						expect(violations[1]).to.match(/line="6".+rule="ApexUnitTestClassShouldHaveAsserts"/);
+						expect(violations[0]).to.match(/line="6".+rule="ApexUnitTestClassShouldHaveAsserts"/);
 					});
 			});
 

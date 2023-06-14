@@ -9,8 +9,8 @@ group = "sfdx"
 version = "1.0"
 
 val distDir = "$buildDir/../../dist"
-val pmdVersion = "6.55.0"
-val pmdFile = "pmd-bin-$pmdVersion.zip"
+val pmdVersion = "7.0.0-rc3"
+val pmdFile = "pmd-dist-$pmdVersion-bin.zip"
 val pmdUrl = "https://github.com/pmd/pmd/releases/download/pmd_releases%2F${pmdVersion}/${pmdFile}"
 val skippableJarRegexes = setOf("""^common_[\d\.-]*\.jar""".toRegex(),
   """^fastparse.*\.jar""".toRegex(),
@@ -19,7 +19,6 @@ val skippableJarRegexes = setOf("""^common_[\d\.-]*\.jar""".toRegex(),
   """^parsers.*\.jar""".toRegex(),
   """^pmd-(cpp|cs|dart|fortran|go|groovy|jsp|kotlin|lua|matlab|modelica|objectivec|perl|php|plsql|python|ruby|scala|swift|ui)[-_\d\.]*\.jar""".toRegex(),
   """^protobuf-java-[\d\.]*\.jar""".toRegex(),
-  """^scala.*\.jar""".toRegex(),
   """^sourcecode_[\d\.-]*\.jar""".toRegex(),
   """^trees_[\d\.-]*\.jar""".toRegex()
 )

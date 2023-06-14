@@ -4,7 +4,7 @@ import * as JreSetupManager from './../JreSetupManager';
 import path = require('path');
 import {FileHandler} from '../util/FileHandler';
 
-const MAIN_CLASS = 'net.sourceforge.pmd.PMD';
+const MAIN_CLASS = 'net.sourceforge.pmd.cli.PmdCli';
 const HEAP_SIZE = '-Xmx1024m';
 
 interface PmdWrapperOptions {
@@ -73,10 +73,10 @@ export default class PmdWrapper extends PmdSupport {
 		const fileHandler = new FileHandler();
 		const tmpPath = await fileHandler.tmpFileWithCleanup();
 		await fileHandler.writeFile(tmpPath, this.path);
-		const args = ['-cp', classpath.join(path.delimiter), HEAP_SIZE, MAIN_CLASS, '-filelist', tmpPath,
-			'-format', this.reportFormat];
+		const args = ['-cp', classpath.join(path.delimiter), HEAP_SIZE, MAIN_CLASS, 'check', '--file-list', tmpPath,
+			'--format', this.reportFormat];
 		if (this.rules.length > 0) {
-			args.push('-rulesets', this.rules);
+			args.push('--rulesets', this.rules);
 		}
 
 		// Then add anything else that's dynamically included based on other input.
